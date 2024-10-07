@@ -278,7 +278,7 @@ In the **`theme()`** section we will specify some info for the legend so we can 
 fig1b <- ggplot(dataA_cases_per_day_rev, aes(x = daterange)) +
   geom_col(aes(y=cases, fill = "Daily Cases"), show.legend = TRUE) +
   geom_line(aes(y = cumulative_case_count * (12/3000), color = "Cumulative Cases"), linewidth = 1) +
-  labs(title = "Figure 1. Number of Confirmed Cases of Disease X in County Y, 2022-2023",
+  labs(title = "Figure 1 V2. Number of Confirmed Cases of Disease X in County Y, 2022-2023",
        x = "Date of Positive Test",
        y = "Daily Case Count") +
   scale_x_date(date_labels = "%b %d, %Y", 
@@ -395,6 +395,8 @@ Step 6 - Make some stratified weekly plots.
 :::
 <br>
 
+*Figures 3 and 4 below were adapted from Batra, Neale, et al. The Epidemiologist R Handbook. 2021.*
+<br>
 
 First, let's make a weekly plot stratified by race. We will go back to using the original file here so we have all of our other grouping variables.
 
@@ -402,6 +404,8 @@ First, let's make a weekly plot stratified by race. We will go back to using the
 
 :::{custom-style="mystyle3"}
 Note that our race categories are alphabetical here, we would have to reorder our factor variable to put these in a different order. You can use **`forcats::fct_relevel`** for that.
+
+For the weekly breaks, week_start=1 is based on Monday (7 would be Sunday). Floor and ceiling options are used to create the start and end of the sequence from Mon to Sun. In the histogram, closed = "left" counts cases from the starting point (Mon). The labs dynamic caption allows us to stamp values from out dataset in the text.
 :::
 <br>
 
@@ -470,7 +474,7 @@ my_labels <- as_labeller(c(
      "0-9"   = "Ages 0-9",
      "10-19" = "Ages 10-19",
      "20-29" = "Ages 20-29",
-     "30-39" = "Ages 35-39",
+     "30-39" = "Ages 30-39",
      "40-49" = "Ages 40-49",
      "50-59" = "Ages 50-59",
      "60-69" = "Ages 60-69",
@@ -522,7 +526,8 @@ ggsave("output\\Figure 4 Dataset A.png", plot = fig4, width = 14, height = 10, d
 # Print image here
 knitr::include_graphics("output\\Figure 4 Dataset A.png")
 ```
-<br><br><br><br>
+<br><br>
+<br><br>
 <br><br>
 <br><br>
 
