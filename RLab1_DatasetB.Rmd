@@ -1,6 +1,6 @@
 ---
 title: "EPI590R R Lab 1 - Dataset B"
-author: "Nicole Luisi"
+author: "Victoria Ngo"
 date: "`r format(Sys.Date(), '%m-%d-%Y')`"
 documentclass: article
 site: bookdown::bookdown_site
