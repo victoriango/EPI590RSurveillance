@@ -8,19 +8,28 @@ output:
   bookdown::word_document2: 
     toc: false
     reference_docx: misc\\wordstyletemplate.docx
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
+
 <br>
 
-:::{custom-style="mystyle1"}
-In the EPI590R Week 4 lab, you learned how to make tables and figures with Microsoft Excel. In this lab, we will use the same datasets to produce similar output with R. 
+::: {custom-style="mystyle1"}
+In the EPI590R Week 4 lab, you learned how to make tables and figures
+with Microsoft Excel. In this lab, we will use the same datasets to
+produce similar output with R.
 
-We will keep all of our work from R Lab 1 here since we will need some of the variables we created. We will skip over the epi curves we already went over in the last lab unless there are questions about those.
+We will keep all of our work from R Lab 1 here since we will need some
+of the variables we created. We will skip over the epi curves we already
+went over in the last lab unless there are questions about those.
 
-Let's make sure we have the necessary packages installed and loaded. 
+Let's make sure we have the necessary packages installed and loaded.
 :::
+
 <br>
 
-:::{custom-style="mystyle3"}
+::: {custom-style="mystyle3"}
 **`readxl`** to read Excel files
 
 **`dplyr`** and **`tidyr`** to manipulate data
@@ -29,7 +38,7 @@ Let's make sure we have the necessary packages installed and loaded.
 
 **`stringr`** to work with strings
 
-**`ggplot2`** to create data visualizations 
+**`ggplot2`** to create data visualizations
 
 **`knitr`** to help with our images in the document
 
@@ -40,8 +49,8 @@ Let's make sure we have the necessary packages installed and loaded.
 **`gt`** for tables
 
 **`openxlsx`** for exporting tables to Excel
-
 :::
+
 <br>
 
 ```{r setup, include=FALSE}
@@ -62,33 +71,48 @@ library(gt)
 library(openxlsx)
 ```
 
-:::{custom-style="mystyle2"}
+::: {custom-style="mystyle2"}
 Step 1 - Import the data (**`Dataset_B.xlsx`**).
 :::
-<br> 
 
-:::{custom-style="mystyle3"}
-*Note: There are some warning messages about specific dates here. All of these are in the `reprt_creationdt_FALSE` field which we aren't using here so we are going to ignore these for now.*
+<br>
+
+::: {custom-style="mystyle3"}
+*Note: There are some warning messages about specific dates here. All of
+these are in the `reprt_creationdt_FALSE` field which we aren't using
+here so we are going to ignore these for now.*
 :::
-<br> 
+
+<br>
 
 ```{r}
 dataB <- read_excel("data\\Dataset_B.xlsx")
 ```
+
 <br>
 
-:::{custom-style="mystyle2"}
-Step 2 - Explore the data. 
+::: {custom-style="mystyle2"}
+Step 2 - Explore the data.
 :::
-<br> 
 
-:::{custom-style="mystyle3"}
-The **`dplyr::glimpse()`** function will show us the number of rows and columns, list the variables and variable types, and give us an idea of the data values. We could also use **`str()`** for this. The **`head()`** function will print just a few rows of the dataset, here **`n=10`** rows is specified.  
+<br>
 
-Next, to explore the data we will use **`lapply()`** to ask R to return the most appropriate type of output based on variable type. Numeric variables will use **`summary()`**, factor and character variables with use **`table()`**, and datetime variables will also use **`summary()`**. 
+::: {custom-style="mystyle3"}
+The **`dplyr::glimpse()`** function will show us the number of rows and
+columns, list the variables and variable types, and give us an idea of
+the data values. We could also use **`str()`** for this. The
+**`head()`** function will print just a few rows of the dataset, here
+**`n=10`** rows is specified.
 
-*Note that we are using results='hide' in the code chunk to suppress all of this output from the knitted Word doc.*.
+Next, to explore the data we will use **`lapply()`** to ask R to return
+the most appropriate type of output based on variable type. Numeric
+variables will use **`summary()`**, factor and character variables with
+use **`table()`**, and datetime variables will also use **`summary()`**.
+
+*Note that we are using results='hide' in the code chunk to suppress all
+of this output from the knitted Word doc.*.
 :::
+
 <br>
 
 ```{r, results = 'hide'}
@@ -103,28 +127,41 @@ lapply(dataB, function(x) {
   if (inherits(x, "POSIXct") || inherits(x, "POSIXt")) {return(summary(x))}
 })
 ```
+
 <br>
 
-:::{custom-style="mystyle2"}
-Step 3 - Clean and prepare data for analysis. 
+::: {custom-style="mystyle2"}
+Step 3 - Clean and prepare data for analysis.
 :::
+
 <br>
 
-Based on the previous Excel lab, we will be using **`pos_sampledt`** for our cases, and we may want to do some grouping by race (**`case_race`**) and age (**`case_dob`**) later on, so we will start by cleaning those variables up a bit. 
+Based on the previous Excel lab, we will be using **`pos_sampledt`** for
+our cases, and we may want to do some grouping by race (**`case_race`**)
+and age (**`case_dob`**) later on, so we will start by cleaning those
+variables up a bit.
 
 <br><br>
 
-:::{custom-style="mystyle3"}
+::: {custom-style="mystyle3"}
 Here we are creating 3 new variables:
 
-The **`age`** variable is calculated by subtracting the date of birth (**`case_dob`**) from the positive test date (**`pos_sampledt`**) and converting that to years; this will give us the age at the time of diagnosis. 
+The **`age`** variable is calculated by subtracting the date of birth
+(**`case_dob`**) from the positive test date (**`pos_sampledt`**) and
+converting that to years; this will give us the age at the time of
+diagnosis.
 
-From there, the **`age_group`** factor variable is created by using the continuous age values to make 10 year age groups, with the exception of the last group which will have all values >=70 years.
+From there, the **`age_group`** factor variable is created by using the
+continuous age values to make 10 year age groups, with the exception of
+the last group which will have all values \>=70 years.
 
-Next, a **`race_cat`** factor variable is created that collapses values of "Other" and "Multiple Races" into one category.
+Next, a **`race_cat`** factor variable is created that collapses values
+of "Other" and "Multiple Races" into one category.
 
-It looks like we have one missing value for **`pos_sampledt`**, so in our last step we will remove this row with **`filter()`**.
+It looks like we have one missing value for **`pos_sampledt`**, so in
+our last step we will remove this row with **`filter()`**.
 :::
+
 <br>
 
 ```{r}
@@ -155,16 +192,21 @@ dataB %>% count(case_race, race_cat) %>%
 # Remove row with missing pos_sampledt value
 dataB <- dataB %>% filter(!is.na(pos_sampledt))
 ```
+
 <br>
 
-:::{custom-style="mystyle2"}
+::: {custom-style="mystyle2"}
 Step 4 - Plot the case counts by day.
 :::
+
 <br>
 
-:::{custom-style="mystyle3"}
-First, we will use **`summarise()`** to count the number of cases by day. Our **`pos_sampledt`** variable is already by day (exact dates) so we will use this as the grouping variable.  
+::: {custom-style="mystyle3"}
+First, we will use **`summarise()`** to count the number of cases by
+day. Our **`pos_sampledt`** variable is already by day (exact dates) so
+we will use this as the grouping variable.
 :::
+
 <br>
 
 ```{r}
@@ -176,17 +218,24 @@ dataB_cases_per_day <- dataB %>%
 # Check results
 head(dataB_cases_per_day, n=10)
 ```
+
 <br>
 
-:::{custom-style="mystyle3"}
-Before we try to plot anything, let's take a look at the date range for **`pos_sampledt`**. We will double check to make sure there are no NAs (there shouldn't be because of our earlier filter), and then use **`range()`**. We are including **`na.rm=T`** so that this step works even if there are NAs, but again we should not have any.
+::: {custom-style="mystyle3"}
+Before we try to plot anything, let's take a look at the date range for
+**`pos_sampledt`**. We will double check to make sure there are no NAs
+(there shouldn't be because of our earlier filter), and then use
+**`range()`**. We are including **`na.rm=T`** so that this step works
+even if there are NAs, but again we should not have any.
 
 It looks like our date range is **Feb 1, 2020 to June 30, 2021**.
 
-We can also get a range of values for the case counts to inform how we set up our plot axis.
+We can also get a range of values for the case counts to inform how we
+set up our plot axis.
 
-It looks like we have daily counts from **1 to 61**. 
+It looks like we have daily counts from **1 to 61**.
 :::
+
 <br>
 
 ```{r}
@@ -199,17 +248,25 @@ range(dataB_cases_per_day$pos_sampledt, na.rm = TRUE)
 # And range of values for the cases
 range(dataB_cases_per_day$cases)
 ```
+
 <br>
 
 Okay, now let's get to work on a daily case plot.
 
 <br><br>
 
-:::{custom-style="mystyle3"}
-First, we are going to use our date range to make a start and end point. We want to make sure our plot is uniform, so we will use the list of dates to enforce consistent 1 day increments, even if we don't have any cases on some days (we will merge this list of dates with our own data and set the case count for any days without cases to zero).
+::: {custom-style="mystyle3"}
+First, we are going to use our date range to make a start and end point.
+We want to make sure our plot is uniform, so we will use the list of
+dates to enforce consistent 1 day increments, even if we don't have any
+cases on some days (we will merge this list of dates with our own data
+and set the case count for any days without cases to zero).
 
-We will also go ahead and create a variable to store the cumulative sum of cases (**`cumulative_case_count`**) using the **`cumsum()`** function. 
+We will also go ahead and create a variable to store the cumulative sum
+of cases (**`cumulative_case_count`**) using the **`cumsum()`**
+function.
 :::
+
 <br>
 
 ```{r}
@@ -228,27 +285,45 @@ dataB_cases_per_day_rev <- merge(x=all_dates,
 # Check result (using n=20 here because there are lots of zeros)
 head(dataB_cases_per_day_rev, n=20)
 ```
+
 <br>
 
 Next, let's make a plot of the cases by day using **`ggplot`**.
 
 <br><br>
 
-:::{custom-style="mystyle3"}
-Note that the new date variable in the merged file is called **`daterange`** and the case count variable is called **`cases`**; these will become our x and y for the plot. 
+::: {custom-style="mystyle3"}
+Note that the new date variable in the merged file is called
+**`daterange`** and the case count variable is called **`cases`**; these
+will become our x and y for the plot.
 
-**`geom_col(fill = "#002060")`** is setting the color for our columns. You can swap that out for any hex code or color name in the quotes.
+**`geom_col(fill = "#002060")`** is setting the color for our columns.
+You can swap that out for any hex code or color name in the quotes.
 
-**`labs()`** allows us to set a main title for the plot (title=), as well as titles for the x (x=) and y (y=) axis. You can edit those labels as needed.
+**`labs()`** allows us to set a main title for the plot (title=), as
+well as titles for the x (x=) and y (y=) axis. You can edit those labels
+as needed.
 
-**`scale_x_date()`** is used to change the format of the date labels on the x axis. The **%b** gives an abbreviated month name (i.e., Jan, Feb, Mar), **%d** gives a 2-digit day, and **%Y** gives a 4-digit year. You can try using other date formats here as well. The **`breaks`** argument is specifying 2 week intervals for the dates between the start and end value we set. 
+**`scale_x_date()`** is used to change the format of the date labels on
+the x axis. The **%b** gives an abbreviated month name (i.e., Jan, Feb,
+Mar), **%d** gives a 2-digit day, and **%Y** gives a 4-digit year. You
+can try using other date formats here as well. The **`breaks`** argument
+is specifying 2 week intervals for the dates between the start and end
+value we set.
 
-**`scale_y_continuous()`** is creating some specifications for the values on the y axis based on our maximum daily case counts.
+**`scale_y_continuous()`** is creating some specifications for the
+values on the y axis based on our maximum daily case counts.
 
-**`theme_light()`** and **`theme()`** elements are just customizing the look a bit more. For the x axis text, we are making sure those dates are vertical (angle=90) so they don't overlap, similar to the way they look in Excel. 
+**`theme_light()`** and **`theme()`** elements are just customizing the
+look a bit more. For the x axis text, we are making sure those dates are
+vertical (angle=90) so they don't overlap, similar to the way they look
+in Excel.
 
-Note that we are storing the whole plot in an object called **`fig`** so we can easily save it as an image file. We are using **`theme_light()`** here because this looks best in the png file.
+Note that we are storing the whole plot in an object called **`fig`** so
+we can easily save it as an image file. We are using **`theme_light()`**
+here because this looks best in the png file.
 :::
+
 <br>
 
 ```{r}
@@ -276,19 +351,34 @@ ggsave("output\\Figure 1 V1 Dataset B.png", plot = fig1a, width = 10, height = 8
 # Print image here
 knitr::include_graphics("output\\Figure 1 V1 Dataset B.png")
 ```
-<br>
-
-Now let's fancy this up a bit more like you did in Excel. Here we will copy and paste the same basic plot and add some additional features. 
 
 <br>
 
-:::{custom-style="mystyle3"}
-**`geom_line()`** is used to overlay a line with our cumulative case count (**`cumulative_case_count`**). Here we are using 12/3000 to rescale the cumulative case count to match the scale we have for daily cases. 
+Now let's fancy this up a bit more like you did in Excel. Here we will
+copy and paste the same basic plot and add some additional features.
 
-**`sec.axis()`** in **`scale_y_continuous()`** allows us to have a secondary axis on the right side of the plot for the cumulative case count while keeping the scale we have for daily case count on the left. We will use increments of 500 for this one. By reworking the aes settings in this version we can use **`scale_fill_manual`** and **`scale_color_manual`** to set colors for the daily case count columns and the cumulative case total line. Again, feel free to adjust these color hex codes - check out [Color Brewer](https://colorbrewer2.org/) for guidance.   
+<br>
 
-In the **`theme()`** section we will specify some info for the legend so we can get a key at the bottom with the colors for our columns and line. 
+::: {custom-style="mystyle3"}
+**`geom_line()`** is used to overlay a line with our cumulative case
+count (**`cumulative_case_count`**). Here we are using 12/3000 to
+rescale the cumulative case count to match the scale we have for daily
+cases.
+
+**`sec.axis()`** in **`scale_y_continuous()`** allows us to have a
+secondary axis on the right side of the plot for the cumulative case
+count while keeping the scale we have for daily case count on the left.
+We will use increments of 500 for this one. By reworking the aes
+settings in this version we can use **`scale_fill_manual`** and
+**`scale_color_manual`** to set colors for the daily case count columns
+and the cumulative case total line. Again, feel free to adjust these
+color hex codes - check out [Color Brewer](https://colorbrewer2.org/)
+for guidance.
+
+In the **`theme()`** section we will specify some info for the legend so
+we can get a key at the bottom with the colors for our columns and line.
 :::
+
 <br>
 
 ```{r}
@@ -320,16 +410,21 @@ ggsave("output\\Figure 1 V2 Dataset B.png", plot = fig1b, width = 10, height = 8
 # Print image here
 knitr::include_graphics("output\\Figure 1 V2 Dataset B.png")
 ```
+
 <br><br>
 
-:::{custom-style="mystyle2"}
+::: {custom-style="mystyle2"}
 Step 5 - Plot the case counts by month.
 :::
+
 <br>
 
-:::{custom-style="mystyle3"}
-First, we will use **`summarise()`** to count the number of cases by month. Here, **`as.Date(cut(pos_sampledt, "month"))`** will group the counts by unique values for month. 
+::: {custom-style="mystyle3"}
+First, we will use **`summarise()`** to count the number of cases by
+month. Here, **`as.Date(cut(pos_sampledt, "month"))`** will group the
+counts by unique values for month.
 :::
+
 <br>
 
 ```{r}
@@ -341,17 +436,22 @@ dataB_cases_per_month <- dataB %>%
 # Check results
 head(dataB_cases_per_month, n=10)
 ```
+
 <br>
 
-:::{custom-style="mystyle3"}
-Again, before we try to plot anything, let's take a look at the date range for **`month`**. We will double check to make sure there are no NAs (no months without any cases).
+::: {custom-style="mystyle3"}
+Again, before we try to plot anything, let's take a look at the date
+range for **`month`**. We will double check to make sure there are no
+NAs (no months without any cases).
 
 It looks like our date range is **Feb 2020 to Jun 2021**.
 
-We can also get a range of values for the case counts to inform how we set up our plot axis.
+We can also get a range of values for the case counts to inform how we
+set up our plot axis.
 
-It looks like we have monthly counts from **35 to 1220**. 
+It looks like we have monthly counts from **35 to 1220**.
 :::
+
 <br>
 
 ```{r}
@@ -364,21 +464,32 @@ range(dataB_cases_per_month$month, na.rm = TRUE)
 # And range of values for the cases
 range(dataB_cases_per_month$cases)
 ```
+
 <br>
 
-Now let's make the monthly plot. 
+Now let's make the monthly plot.
 
-:::{custom-style="mystyle3"}
-Note that the new date variable is called **`month`** and the case count variable is called **`cases`**; these will become our x and y for the plot. 
+::: {custom-style="mystyle3"}
+Note that the new date variable is called **`month`** and the case count
+variable is called **`cases`**; these will become our x and y for the
+plot.
 
-The elements of the monthly plot are similar to the daily plot above, but we have done a few extra things.
+The elements of the monthly plot are similar to the daily plot above,
+but we have done a few extra things.
 
-For the monthly plot, the **`scale_x_date()`** breaks are 1-month intervals. 
+For the monthly plot, the **`scale_x_date()`** breaks are 1-month
+intervals.
 
-The **`custom_labels`** function is allowing us to plot the month abbreviations on the x axis but only including the year value with the month when the year changes, otherwise the axis is really busy and repetitive.  
+The **`custom_labels`** function is allowing us to plot the month
+abbreviations on the x axis but only including the year value with the
+month when the year changes, otherwise the axis is really busy and
+repetitive.
 
-We are also using **`geom_text()`** to insert a label with the number of cases inside each column; you can adjust the placement, size, and color of these labels as needed. 
+We are also using **`geom_text()`** to insert a label with the number of
+cases inside each column; you can adjust the placement, size, and color
+of these labels as needed.
 :::
+
 <br>
 
 ```{r}
@@ -408,25 +519,36 @@ knitr::include_graphics("output\\Figure 2 Dataset B.png")
 
 
 ```
+
 <br><br>
 
-:::{custom-style="mystyle2"}
+::: {custom-style="mystyle2"}
 Step 6 - Make some stratified weekly plots.
 :::
-<br>
-
-*Figures 3 and 4 below were adapted from Batra, Neale, et al. The Epidemiologist R Handbook. 2021.*
-<br>
-
-First, let's make a weekly plot stratified by race. We will go back to using the original file here so we have all of our other grouping variables.
 
 <br>
 
-:::{custom-style="mystyle3"}
-Note that our race categories are alphabetical here, we would have to reorder our factor variable to put these in a different order. You can use **`forcats::fct_relevel`** for that.
+*Figures 3 and 4 below were adapted from Batra, Neale, et al. The
+Epidemiologist R Handbook. 2021.* <br>
 
-For the weekly breaks, week_start=1 is based on Monday (7 would be Sunday). Floor and ceiling options are used to create the start and end of the sequence from Mon to Sun. In the histogram, closed = "left" counts cases from the starting point (Mon). The labs dynamic caption allows us to stamp values from out dataset in the text.
+First, let's make a weekly plot stratified by race. We will go back to
+using the original file here so we have all of our other grouping
+variables.
+
+<br>
+
+::: {custom-style="mystyle3"}
+Note that our race categories are alphabetical here, we would have to
+reorder our factor variable to put these in a different order. You can
+use **`forcats::fct_relevel`** for that.
+
+For the weekly breaks, week_start=1 is based on Monday (7 would be
+Sunday). Floor and ceiling options are used to create the start and end
+of the sequence from Mon to Sun. In the histogram, closed = "left"
+counts cases from the starting point (Mon). The labs dynamic caption
+allows us to stamp values from out dataset in the text.
 :::
+
 <br>
 
 ```{r}
@@ -474,17 +596,24 @@ knitr::include_graphics("output\\Figure 3 Dataset B.png")
 
 
 ```
-<br>
-
-Now let's make one more stratified by age group. We will use facets for this to get mini plots for each age group.
 
 <br>
 
-:::{custom-style="mystyle3"}
-Here just to make the facets simpler, we will exclude the records with NA values for age.
+Now let's make one more stratified by age group. We will use facets for
+this to get mini plots for each age group.
 
-The **`gghighlight::gghighlight()`** option is commented out, but this will put an outline of the full epidemic in the background behind the age group plots. You may need to rescale your image if you want to use this.
+<br>
+
+::: {custom-style="mystyle3"}
+Here just to make the facets simpler, we will exclude the records with
+NA values for age.
+
+The **`gghighlight::gghighlight()`** option is commented out, but this
+will put an outline of the full epidemic in the background behind the
+age group plots. You may need to rescale your image if you want to use
+this.
 :::
+
 <br>
 
 ```{r}
@@ -551,30 +680,31 @@ knitr::include_graphics("output\\Figure 4 Dataset B.png")
 
 ```
 
-<br><br>
-<br><br>
-<br><br>
-<br><br>
+<br><br> <br><br> <br><br> <br><br>
 
-
-
-
-
-:::{custom-style="mystyle2"}
+::: {custom-style="mystyle2"}
 --- New code for Lab 2 starts here. ---
 :::
+
 <br>
 
-:::{custom-style="mystyle2"}
-Step 7 - Create some frequencies by race and make a table. 
+::: {custom-style="mystyle2"}
+Step 7 - Create some frequencies by race and make a table.
 :::
-<br> 
 
-:::{custom-style="mystyle3"}
-First, we will use **`group_by`** and **`summarise`** to create counts and percentages by race. In this example we will also use **`bind_rows`** to add on an extra overall total row for our table.
+<br>
 
-Next, we will use **`gt()`** to create table of results. This one looks pretty good in both R and the knitted Word doc. In the table step, we can control the number of decimals displayed with our percentages, header labels, and we can bold our total row as well. 
+::: {custom-style="mystyle3"}
+First, we will use **`group_by`** and **`summarise`** to create counts
+and percentages by race. In this example we will also use
+**`bind_rows`** to add on an extra overall total row for our table.
+
+Next, we will use **`gt()`** to create table of results. This one looks
+pretty good in both R and the knitted Word doc. In the table step, we
+can control the number of decimals displayed with our percentages,
+header labels, and we can bold our total row as well.
 :::
+
 <br>
 
 ```{r}
@@ -611,26 +741,64 @@ final_table_byrace
 
 
 ```
+
 <br>
 
-**TRY IT!** Use the race example we just completed to generate values and create a table using the *age group* variable.
-<br> 
+**TRY IT!** Use the race example we just completed to generate values
+and create a table using the *age group* variable. <br>
 
 ```{r}
 # Insert code here
+freq_table_byage_group <- dataB %>%
+  group_by(age_group) %>%
+  summarise(
+    count = n(),
+    percentage = (n() / nrow(dataB)) * 100) %>%
+  arrange(age_group) %>%
+  bind_rows(
+    summarise(dataB,
+              age_group = "Total",
+              count = n(),
+              percentage = 100))
 
+final_table_byage_group <- freq_table_byage_group %>%
+  gt() %>%
+  tab_header(
+    title = "Disease X Confirmed Case Count and Percentage of Cases in County Y by Age Group, 2020-2021") %>%
+   fmt_number(
+    columns = c(percentage), 
+    decimals = 1) %>%
+  cols_label(
+    age_group = "Age Group",   
+    count = "Case Count",              
+    percentage = "Percentage of Cases") %>%
+  tab_style(
+    style = list(
+      cell_text(weight = "bold")),
+    locations = cells_body(
+      rows = age_group == "Total"))
+
+final_table_byage_group
 
 ```
+
 <br>
 
-:::{custom-style="mystyle2"}
-Let's do this again but this time we will make a table with both race and age group.
+::: {custom-style="mystyle2"}
+Let's do this again but this time we will make a table with both race
+and age group.
 :::
-<br> 
 
-:::{custom-style="mystyle3"}
-Here we are just combining the race and age group steps, with a few adjustments. In the combined table, we are adding some header rows without data and renaming things to be consistent. *Note that we could do the frequency calculations in one step as well but it would require converting the data to long format.* 
+<br>
+
+::: {custom-style="mystyle3"}
+Here we are just combining the race and age group steps, with a few
+adjustments. In the combined table, we are adding some header rows
+without data and renaming things to be consistent. *Note that we could
+do the frequency calculations in one step as well but it would require
+converting the data to long format.*
 :::
+
 <br>
 
 ```{r}
@@ -696,25 +864,33 @@ final_combo_table
 
 ```
 
-<br>
-These tables look decent in Word as is, but sometimes you want to do more customization manually. Sometimes exporting tables to Excel can be really handy for that.
-<br>
+<br> These tables look decent in Word as is, but sometimes you want to
+do more customization manually. Sometimes exporting tables to Excel can
+be really handy for that. <br>
 
 ```{r}
 # Shortcut to put this in Excel for more formatting options
 #openxlsx::write.xlsx(combo_table, file="output\\final_combo_table.xlsx")
 
 ```
+
 <br>
 
-:::{custom-style="mystyle2"}
+::: {custom-style="mystyle2"}
 Step 8 - Make an age distribution chart.
 :::
-<br> 
 
-:::{custom-style="mystyle3"}
-To recreate the stacked horizontal bar chart you made in Excel, we will adjust the groups slightly and make a bar plot. This one will be presented in order from the smallest to largest percentages but you could rework it to be in order by group as well. We will also use **`geom_text`** to add some data labels and a custom note using x and y values to place the note in a specific place.
+<br>
+
+::: {custom-style="mystyle3"}
+To recreate the stacked horizontal bar chart you made in Excel, we will
+adjust the groups slightly and make a bar plot. This one will be
+presented in order from the smallest to largest percentages but you
+could rework it to be in order by group as well. We will also use
+**`geom_text`** to add some data labels and a custom note using x and y
+values to place the note in a specific place.
 :::
+
 <br>
 
 ```{r}
@@ -762,14 +938,18 @@ knitr::include_graphics("output\\Figure 5 Dataset B.png")
 
 ```
 
-:::{custom-style="mystyle2"}
+::: {custom-style="mystyle2"}
 Step 9 - Make a pie chart to highlight some specific age results.
 :::
-<br> 
 
-:::{custom-style="mystyle3"}
-Let's say you would like to highlight some results for a specific age group. Here we will re-categorize age as 70+ vs <70 years and make a pie chart to show this comparison.
+<br>
+
+::: {custom-style="mystyle3"}
+Let's say you would like to highlight some results for a specific age
+group. Here we will re-categorize age as 70+ vs \<70 years and make a
+pie chart to show this comparison.
 :::
+
 <br>
 
 ```{r}
@@ -803,15 +983,21 @@ knitr::include_graphics("output\\Figure 6 Dataset B.png")
 
 ```
 
-
-:::{custom-style="mystyle2"}
+::: {custom-style="mystyle2"}
 Step 10 - Summarize case counts by symptoms reported.
 :::
-<br> 
 
-:::{custom-style="mystyle3"}
-Let's say we want to summarize case counts by some other variables such as symptoms reported. We will use **`summarise()`** to sum the cases by each symptom variable and then generate a long version of these totals with **`pivot_longer`**. Next we will create a clustered bar chart that displays these totals by symptom next to the overall total cases for each age group. 
+<br>
+
+::: {custom-style="mystyle3"}
+Let's say we want to summarize case counts by some other variables such
+as symptoms reported. We will use **`summarise()`** to sum the cases by
+each symptom variable and then generate a long version of these totals
+with **`pivot_longer`**. Next we will create a clustered bar chart that
+displays these totals by symptom next to the overall total cases for
+each age group.
 :::
+
 <br>
 
 ```{r}
@@ -857,6 +1043,4 @@ knitr::include_graphics("output\\Figure 7 Dataset B.png")
 
 ```
 
-
-<br> <br>
-That's all for now! Good luck with your projects! 
+<br> <br> That's all for now! Good luck with your projects!
