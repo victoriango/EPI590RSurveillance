@@ -1,0 +1,93 @@
+---
+title: "EPI 590R Surveillance Assignment 3"
+author: "Victoria Ngo"
+date: "2024-10-28"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(readxl)     
+library(dplyr)     
+library(tidyr)
+library(ggplot2)   
+library(gt)
+library(openxlsx)
+
+dataB <- read_excel("data\\Dataset_B.xlsx")
+```
+
+## Tables and Figures for Dataset B
+
+```{r}
+# Filtering out unknown or NA values for gender
+datab_filtered <- dataB %>%
+  filter(!is.na(case_gender), case_gender != "Unknown")
+
+# Calculating total number of patients for each gender
+total_by_gender <- datab_filtered %>%
+  group_by(case_gender) %>%
+  summarise(Total = n())
+
+# Summarizing the count of each symptom by gender
+symptom_counts <- datab_filtered %>%
+  group_by(case_gender) %>%
+  summarise(
+    Fever = sum(sym_fever == "Yes", na.rm = TRUE),
+    Subjective_Fever = sum(sym_subjfever == "Yes", na.rm = TRUE),
+    Myalgia = sum(sym_myalgia == "Yes", na.rm = TRUE),
+    Loss_Taste_Smell = sum(sym_losstastesmell == "Yes", na.rm = TRUE),
+    Sore_Throat = sum(sym_sorethroat == "Yes", na.rm = TRUE),
+    Cough = sum(sym_cough == "Yes", na.rm = TRUE),
+    Headache = sum(sym_headache == "Yes", na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Merging the total counts and calculate percentages for each gender
+symptom_counts_with_percent <- symptom_counts %>%
+  left_join(total_by_gender, by = "case_gender") %>%
+  mutate(
+    Fever_Percentage = round((Fever / sum(Fever)) * 100, 2),
+    Subjective_Fever_Percentage = round((Subjective_Fever / sum(Subjective_Fever)) * 100, 2),
+    Myalgia_Percentage = round((Myalgia / sum(Myalgia)) * 100, 2),
+    Loss_Taste_Smell_Percentage = round((Loss_Taste_Smell / sum(Loss_Taste_Smell)) * 100, 2),
+    Sore_Throat_Percentage = round((Sore_Throat / sum(Sore_Throat)) * 100, 2),
+    Cough_Percentage = round((Cough / sum(Cough)) * 100, 2),
+    Headache_Percentage = round((Headache / sum(Headache)) * 100, 2)
+  )
+
+# Reshaping the table to have symptoms as rows and gender as columns
+transposed_table <- symptom_counts_with_percent %>%
+  select(case_gender, Fever_Percentage:Headache_Percentage) %>%
+  pivot_longer(cols = -case_gender, names_to = "Symptom", values_to = "Percentage") %>%
+  pivot_wider(names_from = case_gender, values_from = Percentage)
+
+# View the final transposed table
+print(transposed_table)
+```
+
+Table 1. Gender percentages by symptom
+
+```{r}
+# Summarizing the data by city, gender, and race, excluding "Unknown" and NA values for gender
+city_summary <- dataB %>%
+  filter(confirmed_case == "Yes", 
+         !is.na(case_gender), 
+         case_gender != "Unknown") %>%
+  group_by(case_city, case_gender, case_race) %>%
+  summarise(Case_Count = n()) %>%
+  ungroup()
+# Plotting a bar chart to visualize the disease burden by city, gender, and race
+ggplot(city_summary, aes(x = case_gender, y = Case_Count, fill = case_race)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ case_city) +
+  labs(title = "Disease Burden by City, Gender, and Race",
+       x = "City",
+       y = "Number of Confirmed Cases",
+       fill = "Race") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Figure 1. Disease Burden by Case City, Gender, and Race
