@@ -67,6 +67,34 @@ transposed_table <- symptom_counts_with_percent %>%
 print(transposed_table)
 ```
 
+```{r}
+# Filter out unknown or NA values for gender
+datab_filtered <- dataB %>%
+  filter(!is.na(case_gender), case_gender != "Unknown")
+
+# Summarize the count of each symptom by gender
+symptom_table <- datab_filtered %>%
+  group_by(case_gender) %>%
+  summarise(
+    Fever = sum(sym_fever == "Yes", na.rm = TRUE),
+    Subjective_Fever = sum(sym_subjfever == "Yes", na.rm = TRUE),
+    Myalgia = sum(sym_myalgia == "Yes", na.rm = TRUE),
+    Loss_Taste_Smell = sum(sym_losstastesmell == "Yes", na.rm = TRUE),
+    Sore_Throat = sum(sym_sorethroat == "Yes", na.rm = TRUE),
+    Cough = sum(sym_cough == "Yes", na.rm = TRUE),
+    Headache = sum(sym_headache == "Yes", na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Reshape the table to have symptoms as rows and genders as columns
+transposed_symptom_table <- symptom_table %>%
+  pivot_longer(cols = -case_gender, names_to = "Symptom", values_to = "Count") %>%
+  pivot_wider(names_from = case_gender, values_from = Count)
+
+# View the transposed table
+print(transposed_symptom_table)
+```
+
 Table 1. Gender percentages by symptom
 
 ```{r}
